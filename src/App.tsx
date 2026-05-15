@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useSnakeLogic, BonusType } from './hooks/useSnakeLogic';
 import { SnakeCanvas } from './components/SnakeCanvas';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, RotateCcw, Pause, Trophy, Star } from 'lucide-react';
@@ -11,17 +11,109 @@ const BONUS_EMOJIS: Record<BonusType, string> = {
   monkey: '🐵',
 };
 
+const THEMES = {
+  1: {
+    panel: 'bg-[#1a1025]/95 border-[3px] border-[#00F0FF] shadow-[4px_4px_0_0_#FF0055]',
+    panelInner: 'bg-[#2a1a3a] border-2 border-[#00F0FF] shadow-sm',
+    textHead: 'text-[#00F0FF]',
+    textSub: 'text-[#FFEA00]',
+    textMuted: 'text-[#FF0055]',
+    textInv: 'text-white',
+    button: 'bg-[#2a1a3a] text-[#00F0FF] border-[3px] border-[#00F0FF] shadow-[0_4px_0_#FF0055] hover:bg-[#3a2a4a]',
+    canvas: 'bg-[#0f0916] border-[3px] border-[#00F0FF] shadow-[4px_4px_0_0_#FF0055]',
+    overlay: 'bg-black/70 backdrop-blur-sm',
+    overlayPanel: 'bg-[#1a1025] border-[3px] border-[#00F0FF] shadow-[6px_6px_0_0_#FF0055]',
+    primaryBtn: 'bg-[#FF0055] hover:bg-[#d00044] text-white',
+    successBtn: 'bg-[#00FF00] hover:bg-[#00cc00] text-[#1a1025]',
+    dangerBtn: 'bg-[#FF0055] hover:bg-[#d00044] text-white',
+    bonusUnf: 'bg-[#2a1a3a] border-[#1a1025]',
+    bonusFnd: 'bg-[#0f0916] border-[#00F0FF] shadow-inner',
+  },
+  2: {
+    panel: 'bg-[#2b1055]/95 border-[3px] border-[#00ffff] shadow-[4px_4px_0_0_#ff00ff]',
+    panelInner: 'bg-[#43187a] border-2 border-[#00ffff] shadow-sm',
+    textHead: 'text-[#00ffff]',
+    textSub: 'text-[#ffff00]',
+    textMuted: 'text-[#ff00ff]',
+    textInv: 'text-white',
+    button: 'bg-[#43187a] text-[#00ffff] border-[3px] border-[#00ffff] shadow-[0_4px_0_#ff00ff] hover:bg-[#5b22a6]',
+    canvas: 'bg-[#190833] border-[3px] border-[#00ffff] shadow-[4px_4px_0_0_#ff00ff]',
+    overlay: 'bg-[#190833]/70 backdrop-blur-sm',
+    overlayPanel: 'bg-[#2b1055] border-[3px] border-[#00ffff] shadow-[6px_6px_0_0_#ff00ff]',
+    primaryBtn: 'bg-[#ff00ff] hover:bg-[#d900d9] text-white',
+    successBtn: 'bg-[#00ffff] hover:bg-[#00cccc] text-[#2b1055]',
+    dangerBtn: 'bg-[#ff00ff] hover:bg-[#d900d9] text-white',
+    bonusUnf: 'bg-[#43187a] border-[#2b1055]',
+    bonusFnd: 'bg-[#190833] border-[#00ffff] shadow-inner',
+  },
+  3: {
+    panel: 'bg-white/95 border-[3px] border-pink-500 shadow-[4px_4px_0_0_#be185d]',
+    panelInner: 'bg-pink-50 border-2 border-pink-400 shadow-sm',
+    textHead: 'text-pink-700',
+    textSub: 'text-pink-900',
+    textMuted: 'text-pink-600',
+    textInv: 'text-white',
+    button: 'bg-pink-50 text-pink-700 border-[3px] border-pink-500 shadow-[0_4px_0_#be185d] hover:bg-pink-100',
+    canvas: 'bg-pink-50 border-[3px] border-pink-500 shadow-[4px_4px_0_0_#be185d]',
+    overlay: 'bg-pink-900/40 backdrop-blur-sm',
+    overlayPanel: 'bg-white border-[3px] border-pink-500 shadow-[6px_6px_0_0_#be185d]',
+    primaryBtn: 'bg-pink-500 hover:bg-pink-600 text-white',
+    successBtn: 'bg-pink-400 hover:bg-pink-500 text-white',
+    dangerBtn: 'bg-rose-500 hover:bg-rose-600 text-white',
+    bonusUnf: 'bg-white border-pink-200',
+    bonusFnd: 'bg-pink-100 border-pink-500 shadow-inner',
+  },
+  4: {
+    panel: 'bg-white/95 border-[3px] border-black shadow-[4px_4px_0_0_#000]',
+    panelInner: 'bg-yellow-100 border-2 border-black shadow-sm',
+    textHead: 'text-black',
+    textSub: 'text-gray-800',
+    textMuted: 'text-gray-600',
+    textInv: 'text-white',
+    button: 'bg-yellow-200 text-black border-[3px] border-black shadow-[0_4px_0_#000] hover:bg-yellow-300',
+    canvas: 'bg-blue-50 border-[3px] border-black shadow-[4px_4px_0_0_#000]',
+    overlay: 'bg-black/50 backdrop-blur-sm',
+    overlayPanel: 'bg-white border-[3px] border-black shadow-[6px_6px_0_0_#000]',
+    primaryBtn: 'bg-blue-500 hover:bg-blue-600 text-white',
+    successBtn: 'bg-green-500 hover:bg-green-600 text-white',
+    dangerBtn: 'bg-orange-500 hover:bg-orange-600 text-white',
+    bonusUnf: 'bg-white border-gray-300',
+    bonusFnd: 'bg-yellow-100 border-black shadow-inner',
+  },
+  5: {
+    panel: 'bg-white/95 border-[3px] border-red-800 shadow-[4px_4px_0_0_#991b1b]',
+    panelInner: 'bg-red-50 border-2 border-red-800 shadow-sm',
+    textHead: 'text-red-900',
+    textSub: 'text-red-950',
+    textMuted: 'text-red-700',
+    textInv: 'text-white',
+    button: 'bg-white text-red-900 border-[3px] border-red-800 shadow-[0_4px_0_#991b1b] hover:bg-red-50',
+    canvas: 'bg-red-50 border-[3px] border-red-800 shadow-[4px_4px_0_0_#991b1b]',
+    overlay: 'bg-red-950/40 backdrop-blur-sm',
+    overlayPanel: 'bg-white border-[3px] border-red-800 shadow-[6px_6px_0_0_#991b1b]',
+    primaryBtn: 'bg-red-600 hover:bg-red-700 text-white',
+    successBtn: 'bg-green-600 hover:bg-green-700 text-white',
+    dangerBtn: 'bg-red-600 hover:bg-red-700 text-white',
+    bonusUnf: 'bg-white border-red-200',
+    bonusFnd: 'bg-red-50 border-red-800 shadow-inner',
+  }
+};
+
 export default function App() {
+  const [themeIndex, setThemeIndex] = useState(1);
+
   const {
     snake,
     direction,
     food,
     bonus,
     score,
+    highScore,
     gameOver,
     hasWon,
     isJerryLevel,
     eatenAnimals,
+    lastEatenEvent,
     isPaused,
     hasStarted,
     gridSize,
@@ -29,8 +121,22 @@ export default function App() {
     changeDirection,
     resetGame,
     setIsPaused,
-    setHasStarted
+    setHasStarted,
+    isEndlessMode,
+    setIsEndlessMode
   } = useSnakeLogic();
+
+  const [particles, setParticles] = useState<{id: number, x: number, y: number, type: BonusType}[]>([]);
+
+  useEffect(() => {
+    if (lastEatenEvent) {
+      setParticles(p => [...p, lastEatenEvent]);
+      const token = setTimeout(() => {
+        setParticles(p => p.filter(x => x.id !== lastEatenEvent.id));
+      }, 600);
+      return () => clearTimeout(token);
+    }
+  }, [lastEatenEvent]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -64,6 +170,11 @@ export default function App() {
           else if (gameOver || hasWon) resetGame();
           else setIsPaused((p) => !p);
           break;
+        case '1': setThemeIndex(1); break;
+        case '2': setThemeIndex(2); break;
+        case '3': setThemeIndex(3); break;
+        case '4': setThemeIndex(4); break;
+        case '5': setThemeIndex(5); break;
       }
     };
 
@@ -71,83 +182,117 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [changeDirection, hasStarted, gameOver, hasWon, resetGame, setIsPaused, setHasStarted]);
 
+  const theme = THEMES[themeIndex as keyof typeof THEMES];
+
   return (
-    <div className="min-h-screen w-full bg-orange-100 flex flex-col items-center justify-center p-2 sm:p-4 font-sans touch-none overflow-auto">
-      <div className="flex flex-col md:flex-row gap-4 sm:gap-6 items-center md:items-start w-full max-w-3xl justify-center pt-8 pb-8 md:py-0">
+    <div className={`min-h-[100dvh] w-full bg-theme-${themeIndex} flex flex-col items-center justify-start xl:justify-center p-2 sm:p-4 font-sans overflow-x-hidden transition-all duration-500`}>
+      <div className="flex flex-col md:flex-row gap-2 sm:gap-6 items-center md:items-start w-full max-w-3xl justify-center pt-2 sm:pt-8 pb-4 md:py-0">
         
-        <div className="w-full max-w-[400px] flex flex-col gap-4 shrink-0">
+        <div className="w-full max-w-[400px] max-h-[100dvh] flex flex-col gap-2 sm:gap-4 shrink-0 px-1 sm:px-0">
           
           {/* Header */}
-          <div className="flex items-center justify-between bg-white/60 p-4 rounded-2xl shadow-sm border border-orange-200">
+          <div className={`flex items-center justify-between p-2 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 transition-colors duration-500 ${theme.panel}`}>
             <div>
-              <h1 className="text-3xl font-extrabold text-orange-800 tracking-tight">Arthur</h1>
-              <p className="text-orange-600 text-sm font-medium leading-none mt-1">The Very Hungry Dog</p>
+              <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight transition-colors duration-500 ${theme.textHead}`}>Arthur</h1>
+              <p className={`text-xs sm:text-sm font-medium leading-none mt-1 transition-colors duration-500 ${theme.textSub}`}>The Very Hungry Dog</p>
             </div>
-            <div className="text-right flex flex-col items-end">
-              <div className="flex items-center gap-1.5 text-orange-900 bg-orange-200/50 px-3 py-1.5 rounded-lg border border-orange-300 shadow-inner">
-                <Trophy size={18} className="text-orange-600" />
-                <span className="text-xl font-black">{score}</span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              {hasStarted && !gameOver && !hasWon && (
+                <button 
+                   className={`p-1.5 sm:p-2 rounded-full active:scale-95 transition-all duration-500 shrink-0 ${theme.panelInner} ${theme.textHead}`}
+                   onClick={() => setIsPaused(p => !p)}
+                   aria-label={isPaused ? "Resume" : "Pause"}
+                >
+                   {isPaused ? <Play className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" /> : <Pause className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" />}
+                </button>
+              )}
+              <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-colors duration-500 ${theme.panelInner} ${theme.textHead}`}>
+                <div className="flex flex-col items-end pr-1 sm:pr-2 border-r border-current/20">
+                   <div className="text-[9px] sm:text-[10px] uppercase font-extrabold opacity-70 leading-none">Best</div>
+                   <div className="text-xs sm:text-sm font-black leading-none mt-0.5">{highScore}</div>
+                </div>
+                <Trophy className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                <span className="text-lg sm:text-xl font-black">{score}</span>
               </div>
             </div>
           </div>
 
           {/* Game Area */}
-          <div className="relative w-full aspect-square">
-            <SnakeCanvas
-              snake={snake}
-              direction={direction}
-              food={food}
-              bonus={bonus}
-              gridSize={gridSize}
-              gameOver={gameOver}
-              isJerryLevel={isJerryLevel}
-            />
+          <div className={`relative w-full aspect-square max-w-[340px] sm:max-w-full mx-auto shrink transition-colors duration-500 ${gameOver && !hasWon ? 'animate-shake' : ''}`}>
+            <div className="absolute inset-0">
+              <SnakeCanvas
+                snake={snake}
+                direction={direction}
+                food={food}
+                bonus={bonus}
+                gridSize={gridSize}
+                gameOver={gameOver}
+                isJerryLevel={isJerryLevel}
+                themeClass={`transition-colors duration-500 ${theme.canvas}`}
+                themeIndex={themeIndex}
+              />
+            </div>
+
+            {/* Particle Effects */}
+            {particles.map(p => (
+              <div key={p.id} className="absolute pointer-events-none z-20" style={{ left: `${(p.x + 0.5) / gridSize * 100}%`, top: `${(p.y + 0.5) / gridSize * 100}%` }}>
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="absolute text-xl sm:text-3xl animate-particle" style={{
+                    '--dx': `${Math.cos(i * Math.PI / 3) * 60}px`,
+                    '--dy': `${Math.sin(i * Math.PI / 3) * 60}px`,
+                    '--rot': `${Math.random() * 360}deg`
+                  } as React.CSSProperties}>
+                    {BONUS_EMOJIS[p.type]}
+                  </div>
+                ))}
+              </div>
+            ))}
             
             {/* Overlays */}
             {(!hasStarted || gameOver || hasWon || isPaused) && (
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-xl flex items-center justify-center p-6 z-10 overflow-hidden">
-                <div className="bg-white rounded-2xl p-6 shadow-2xl text-center max-w-[90%] border-4 border-orange-200 flex flex-col items-center animate-in zoom-in duration-200">
+              <div className={`absolute inset-0 rounded-xl sm:rounded-2xl flex items-center justify-center p-4 sm:p-6 z-10 overflow-hidden transition-colors duration-500 ${theme.overlay}`}>
+                <div className={`rounded-2xl p-4 sm:p-6 text-center w-[95%] flex flex-col items-center animate-in zoom-in duration-200 transition-colors ${theme.overlayPanel}`}>
                   {!hasStarted ? (
                     <>
-                      <h2 className="text-2xl font-bold mb-2 text-orange-800">Ready to play?</h2>
-                      <p className="text-gray-600 mb-6 text-sm">Help Arthur eat his green tires and chew up all 5 of his favorite stuffed animals! He's blind in one eye but he's very hungry.</p>
+                      <h2 className={`text-xl sm:text-2xl font-bold mb-2 transition-colors duration-500 ${theme.textHead}`}>Ready to play?</h2>
+                      <p className={`mb-4 sm:mb-6 text-xs sm:text-sm transition-colors duration-500 ${theme.textSub}`}>Help Arthur eat his green tires and chew up all 5 of his favorite stuffed animals! He's blind in one eye but he's very hungry.</p>
                       <button 
                         onClick={() => setHasStarted(true)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 transition-all text-lg flex items-center gap-2"
+                        className={`font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full shadow-lg active:scale-95 transition-all text-base sm:text-lg flex items-center gap-2 ${theme.primaryBtn}`}
                       >
-                        <Play fill="currentColor" size={20}/> Play Now
+                        <Play fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"/> Play Now
                       </button>
                     </>
                   ) : gameOver && !hasWon ? (
                     <>
-                      <h2 className="text-3xl font-black mb-2 text-red-600">Woof!</h2>
-                      <p className="text-gray-700 mb-6 font-medium">Arthur bumped into something.<br/>Final Score: {score}</p>
+                      <h2 className={`text-2xl sm:text-3xl font-black mb-2 transition-colors duration-500 ${theme.textMuted}`}>Woof!</h2>
+                      <p className={`mb-4 sm:mb-6 text-sm sm:text-base font-medium transition-colors duration-500 ${theme.textSub}`}>Arthur bumped into something.<br/>Final Score: {score} green tires</p>
                       <button 
                         onClick={resetGame}
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 transition-all text-lg flex items-center gap-2"
+                        className={`font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full shadow-lg active:scale-95 transition-all text-base sm:text-lg flex items-center gap-2 ${theme.dangerBtn}`}
                       >
-                        <RotateCcw size={20}/> Try Again
+                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5"/> Try Again
                       </button>
                     </>
                   ) : hasWon ? (
                     <>
-                      <h2 className="text-3xl font-black mb-2 text-green-600">You Win!</h2>
-                      <p className="text-gray-700 mb-6 font-medium">Arthur ate Jerry! He is full now.<br/>Final Score: {score}</p>
+                      <h2 className={`text-2xl sm:text-3xl font-black mb-2 transition-colors duration-500 ${theme.textHead}`}>You Win!</h2>
+                      <p className={`mb-4 sm:mb-6 text-sm sm:text-base font-medium transition-colors duration-500 ${theme.textSub}`}>Arthur ate Jerry! He is full now.<br/>Final Score: {score} green tires</p>
                       <button 
                         onClick={resetGame}
-                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 transition-all text-lg flex items-center gap-2"
+                        className={`font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full shadow-lg active:scale-95 transition-all text-base sm:text-lg flex items-center gap-2 ${theme.successBtn}`}
                       >
-                        <Star fill="currentColor" size={20}/> Play Again
+                        <Star fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"/> Play Again
                       </button>
                     </>
                   ) : isPaused ? (
                     <>
-                      <h2 className="text-2xl font-bold mb-6 text-orange-800">Paused</h2>
+                      <h2 className={`text-xl sm:text-2xl font-bold mb-4 sm:mb-6 transition-colors duration-500 ${theme.textHead}`}>Paused</h2>
                       <button 
                         onClick={() => setIsPaused(false)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 transition-all text-lg flex items-center gap-2"
+                        className={`font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full shadow-lg active:scale-95 transition-all text-base sm:text-lg flex items-center gap-2 ${theme.primaryBtn}`}
                       >
-                        <Play fill="currentColor" size={20}/> Resume
+                        <Play fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"/> Resume
                       </button>
                     </>
                   ) : null}
@@ -157,31 +302,20 @@ export default function App() {
           </div>
 
           {/* Controls */}
-          <div className="flex flex-col items-center gap-2 mt-2 select-none">
-            {/* Pause Button for mobile */}
-            <div className="w-full flex justify-end px-2">
-               <button 
-                  className="bg-white/50 p-3 rounded-full text-orange-800 hover:bg-white/80 active:scale-95 transition-colors"
-                  onClick={() => setIsPaused(p => !p)}
-                  disabled={!hasStarted || gameOver}
-               >
-                  {isPaused ? <Play size={24} /> : <Pause size={24} />}
-               </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 p-4 bg-orange-200/50 rounded-full border border-orange-200/80 shadow-inner w-fit mx-auto aspect-[3/2.2]">
+          <div className="flex flex-col items-center gap-2 shrink-0 select-none">
+            <div className={`grid grid-cols-3 gap-3 p-4 rounded-[2rem] w-fit mx-auto aspect-[3/2.2] transition-colors duration-500 ${theme.panel}`}>
               <div />
-              <ControlButton onAction={() => changeDirection({ x: 0, y: -1 })} aria-label="Up">
+              <ControlButton theme={theme} onAction={() => changeDirection({ x: 0, y: -1 })} aria-label="Up">
                 <ChevronUp size={36} strokeWidth={3} />
               </ControlButton>
               <div />
-              <ControlButton onAction={() => changeDirection({ x: -1, y: 0 })} aria-label="Left">
+              <ControlButton theme={theme} onAction={() => changeDirection({ x: -1, y: 0 })} aria-label="Left">
                 <ChevronLeft size={36} strokeWidth={3} />
               </ControlButton>
-              <ControlButton onAction={() => changeDirection({ x: 0, y: 1 })} aria-label="Down">
+              <ControlButton theme={theme} onAction={() => changeDirection({ x: 0, y: 1 })} aria-label="Down">
                 <ChevronDown size={36} strokeWidth={3} />
               </ControlButton>
-              <ControlButton onAction={() => changeDirection({ x: 1, y: 0 })} aria-label="Right">
+              <ControlButton theme={theme} onAction={() => changeDirection({ x: 1, y: 0 })} aria-label="Right">
                 <ChevronRight size={36} strokeWidth={3} />
               </ControlButton>
             </div>
@@ -190,28 +324,26 @@ export default function App() {
         </div>
 
         {/* Right: Scoreboard Sidebar */}
-        <div className="w-full md:w-64 shrink-0 flex flex-col gap-4 max-w-[400px]">
-          <div className="bg-white/60 p-5 rounded-2xl shadow-sm border border-orange-200">
-            <h2 className="text-xl font-black text-orange-800 mb-4 text-center tracking-tight">Stuffed Animals</h2>
-            <div className="grid grid-cols-5 md:grid-cols-2 gap-3">
+        <div className="w-full md:w-64 shrink-0 flex flex-col gap-4 max-w-[400px] px-1 sm:px-0 pb-4 sm:pb-0">
+          <div className={`p-3 sm:p-5 rounded-2xl transition-colors duration-500 ${theme.panel}`}>
+            <h2 className={`text-lg sm:text-xl font-black mb-3 sm:mb-4 text-center tracking-tight transition-colors duration-500 ${theme.textHead}`}>Stuffed Animals</h2>
+            <div className="grid grid-cols-5 md:grid-cols-2 gap-2 sm:gap-3">
               {bonusTypes.map((type: BonusType) => {
                 const isEaten = eatenAnimals.includes(type);
                 return (
                   <div 
                     key={type} 
-                    className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 ${
-                      isEaten 
-                        ? 'bg-orange-100 border-orange-300 shadow-inner' 
-                        : 'bg-white border-dashed border-gray-300 shadow-sm'
+                    className={`flex flex-col items-center justify-center p-2 sm:p-4 rounded-xl border-[3px] transition-all duration-300 ${
+                      isEaten ? theme.bonusFnd : theme.bonusUnf
                     }`}
                   >
-                    <div className="relative text-3xl sm:text-4xl mt-1">
-                      <span className={`block transition-all duration-500 ${isEaten ? 'opacity-30 grayscale blur-[1px]' : 'scale-110'}`}>
+                    <div className="relative text-2xl sm:text-4xl mt-1">
+                      <span className={`block transition-all duration-500 ${isEaten ? `opacity-50 grayscale blur-[1px] brightness-150` : 'scale-110'}`}>
                         {BONUS_EMOJIS[type]}
                       </span>
                       {isEaten && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-red-600 font-black text-lg sm:text-xl tracking-tighter" style={{textShadow: '0px 0px 4px white, 0px 0px 8px white'}}>X_X</span>
+                          <span className={`font-black text-base sm:text-xl tracking-tighter ${theme.textMuted}`} style={{textShadow: '0px 0px 4px rgba(0,0,0,0.5)'}}>X_X</span>
                         </div>
                       )}
                     </div>
@@ -220,6 +352,23 @@ export default function App() {
               })}
             </div>
           </div>
+
+          <div className={`p-3 sm:p-4 rounded-2xl transition-colors duration-500 flex justify-center ${theme.panel}`}>
+            <label className="flex items-center gap-3 cursor-pointer touch-manipulation group">
+              <div className="relative">
+                <input 
+                  type="checkbox" 
+                  className="sr-only" 
+                  checked={isEndlessMode}
+                  onChange={(e) => setIsEndlessMode(e.target.checked)}
+                />
+                <div className={`block w-10 h-6 sm:w-12 sm:h-7 rounded-full transition-colors duration-300 ${isEndlessMode ? 'bg-[#FF0055]' : 'bg-current opacity-20'}`}></div>
+                <div className={`absolute left-1 top-1 bg-white w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow transition-transform duration-300 ${isEndlessMode ? 'translate-x-4 sm:translate-x-5' : ''}`}></div>
+              </div>
+              <span className={`text-sm sm:text-base font-bold transition-colors duration-500 select-none ${theme.textHead}`}>Endless Mode</span>
+            </label>
+          </div>
+
         </div>
         {/* End of Sidebar */}
 
@@ -228,7 +377,7 @@ export default function App() {
   );
 }
 
-function ControlButton({ children, onAction, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { onAction: () => void }) {
+function ControlButton({ theme, children, onAction, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { onAction: () => void, theme: any }) {
   const handleAction = (e: React.SyntheticEvent) => {
     e.preventDefault();
     onAction();
@@ -236,7 +385,7 @@ function ControlButton({ children, onAction, ...props }: React.ButtonHTMLAttribu
 
   return (
     <button
-      className="w-16 h-16 bg-white flex items-center justify-center rounded-full shadow-[0_4px_0_theme(colors.orange.300)] active:shadow-none active:translate-y-1 text-orange-700 hover:bg-orange-50 transition-all focus:outline-none focus:ring-2 focus:ring-orange-400 touch-manipulation"
+      className={`w-16 h-16 flex items-center justify-center rounded-2xl active:translate-y-1 transition-all focus:outline-none touch-manipulation ${theme.button}`}
       onPointerDown={handleAction}
       {...props}
     >

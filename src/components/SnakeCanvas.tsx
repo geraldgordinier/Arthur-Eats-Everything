@@ -9,6 +9,8 @@ interface SnakeCanvasProps {
   gridSize: number;
   gameOver: boolean;
   isJerryLevel: boolean;
+  themeClass?: string;
+  themeIndex?: number;
 }
 
 const THEME = {
@@ -34,6 +36,8 @@ export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
   gridSize,
   gameOver,
   isJerryLevel,
+  themeClass,
+  themeIndex = 1,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -44,18 +48,89 @@ export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const cellSize = canvas.width / gridSize;
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const width = 400;
+    const height = 400;
+    
+    // Scale canvas internally for crispness on high-DPI displays
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const cellSize = width / gridSize;
     const halfCell = cellSize / 2;
 
-    // Clear board
-    ctx.fillStyle = THEME.background;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Clear board (relies on CSS background for base color)
+    ctx.clearRect(0, 0, width, height);
 
-    // Draw grid
-    ctx.fillStyle = THEME.grid;
-    for (let i = 0; i <= canvas.width; i += cellSize) {
-      ctx.fillRect(i, 0, 1, canvas.height);
-      ctx.fillRect(0, i, canvas.width, 1);
+    // Draw theme-specific grid
+    if (themeIndex === 1) { // Neon Bowling
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
+      for (let i = 0; i <= width; i += cellSize) {
+        ctx.fillRect(i, 0, 1, height);
+        ctx.fillRect(0, i, width, 1);
+      }
+      ctx.fillStyle = '#FF0055';
+      for(let x=halfCell; x<width; x+=cellSize) {
+         for(let y=halfCell; y<height; y+=cellSize) {
+            ctx.fillRect(x-1, y-1, 2, 2);
+         }
+      }
+    } else if (themeIndex === 2) { // Vaporwave
+      ctx.fillStyle = 'rgba(255, 0, 255, 0.2)';
+      for (let i = 0; i <= width; i += cellSize) {
+        ctx.fillRect(i, 0, 2, height);
+        ctx.fillRect(0, i, width, 2);
+      }
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+      for(let x=cellSize; x<width; x+=cellSize) {
+         for(let y=cellSize; y<height; y+=cellSize) {
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI*2);
+            ctx.fill();
+         }
+      }
+    } else if (themeIndex === 3) { // Retro Checkered Pink
+      ctx.fillStyle = 'rgba(244, 114, 182, 0.15)'; // pink-400 with alpha
+      for(let x=0; x<gridSize; x++) {
+         for(let y=0; y<gridSize; y++) {
+            if((x+y)%2 === 0) {
+               ctx.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+            }
+         }
+      }
+    } else if (themeIndex === 4) { // Memphis
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; 
+      ctx.lineWidth = 2;
+      for(let x=0; x<gridSize; x++) {
+         for(let y=0; y<gridSize; y++) {
+            if((x+y) % 3 === 0) {
+              ctx.beginPath();
+              ctx.moveTo(x*cellSize + cellSize*0.2, y*cellSize + cellSize*0.2);
+              ctx.lineTo(x*cellSize + cellSize*0.8, y*cellSize + cellSize*0.8);
+              ctx.stroke();
+            } else if ((x+y) % 3 === 1) {
+              ctx.beginPath();
+              ctx.arc(x*cellSize + halfCell, y*cellSize + halfCell, cellSize*0.2, 0, Math.PI*2);
+              ctx.stroke();
+            } else {
+              ctx.fillStyle = 'rgba(0,0,0,0.05)';
+              ctx.fillRect(x*cellSize + cellSize*0.3, y*cellSize + cellSize*0.3, cellSize*0.4, cellSize*0.4);
+            }
+         }
+      }
+    } else if (themeIndex === 5) { // Picnic Gingham
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; // red-500
+      for (let i = 0; i <= width; i += cellSize) {
+        ctx.fillRect(i, 0, cellSize/2, height);
+        ctx.fillRect(0, i, width, cellSize/2);
+      }
+    } else { // Fallback standard grid
+      ctx.fillStyle = THEME.grid;
+      for (let i = 0; i <= width; i += cellSize) {
+        ctx.fillRect(i, 0, 1, height);
+        ctx.fillRect(0, i, width, 1);
+      }
     }
 
     // Shared Emoji Drawing Function
@@ -82,7 +157,7 @@ export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
       ctx.beginPath();
       ctx.arc(0, 0, cellSize * 0.4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = THEME.background; // Hole
+      ctx.fillStyle = '#143818'; // Dark hole
       ctx.beginPath();
       ctx.arc(0, 0, cellSize * 0.15, 0, Math.PI * 2);
       ctx.fill();
@@ -236,14 +311,14 @@ export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
       ctx.restore();
     }
 
-  }, [snake, direction, food, bonus, gridSize, gameOver, isJerryLevel]);
+  }, [snake, direction, food, bonus, gridSize, gameOver, isJerryLevel, themeIndex]);
 
   return (
     <canvas
       ref={canvasRef}
       width={400}
       height={400}
-      className="w-full h-auto aspect-square bg-amber-50 rounded-xl shadow-lg border-4 border-amber-200"
+      className={`w-full h-auto aspect-square rounded-xl ${themeClass || 'bg-amber-50 shadow-[4px_4px_0_0_rgb(17,24,39)] border-[3px] border-gray-900'}`}
       style={{ touchAction: 'none' }}
     />
   );

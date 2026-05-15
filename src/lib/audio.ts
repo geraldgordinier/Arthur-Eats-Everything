@@ -1,4 +1,4 @@
-export const playSound = (type: 'eat' | 'eat-bonus' | 'die') => {
+export const playSound = (type: 'eat' | 'eat-bonus' | 'die' | 'win') => {
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
@@ -34,6 +34,16 @@ export const playSound = (type: 'eat' | 'eat-bonus' | 'die') => {
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.4);
+    } else if (type === 'win') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1); 
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2); 
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3); 
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.5);
     }
   } catch (e) {
     console.warn('Audio play prevented or failed', e);

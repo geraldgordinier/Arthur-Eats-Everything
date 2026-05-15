@@ -1,20 +1,19 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Arthur: The Very Hungry Dog
 
-# Run and deploy your AI Studio app
+A fun game built for web and mobile inspired by the classic Nokia snake game, customized for Arthur the dog.
 
-This contains everything you need to run your app locally.
+## Features
+- **Play as Arthur**: Help Arthur, a fluffy brown dog (blind in one eye), eat his favorite treats to grow longer.
+- **Green Tires & Stuffed Animals**: Eat standard green tire treats, and look out for bonus stuffed animals appearing every few tires (cow, lion, duck, frog, monkey).
+- **Final Level**: A special surprise level awaits once Arthur has eaten all 5 stuffed animals!
+- **Cross-Platform**: Designed with responsive on-screen D-pad controls for touch devices and keyboard support for desktop gameplay.
+- **Retro Sounds**: Enjoy basic synthesized sound effects inspired by early mobile games.
 
-View your app in AI Studio: https://ai.studio/apps/bef74348-af7e-4958-a1f7-a4e01494e37a
+## Controls
+- **Desktop**: Use `Arrow Keys` or `W`, `A`, `S`, `D` to navigate. `Space` to start/pause.
+- **Mobile**: Use the on-screen arrow buttons to navigate.
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Built With
+- React & Vite
+- Tailwind CSS
+- HTML5 Canvas

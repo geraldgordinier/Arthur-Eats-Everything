@@ -28,14 +28,24 @@ export function useSnakeLogic() {
   const [food, setFood] = useState<Point>({ x: 10, y: 5 });
   const [bonus, setBonus] = useState<Bonus | null>(null);
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => {
+    try {
+      const saved = localStorage.getItem('arthur_highscore');
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [gameOver, setGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [speed, setSpeed] = useState(INITIAL_SPEED);
   
   const [eatenAnimals, setEatenAnimals] = useState<BonusType[]>([]);
+  const [lastEatenEvent, setLastEatenEvent] = useState<{id: number, x: number, y: number, type: BonusType} | null>(null);
   const [hasWon, setHasWon] = useState(false);
   const [isJerryLevel, setIsJerryLevel] = useState(false);
+  const [isEndlessMode, setIsEndlessMode] = useState(false);
   const treatsEaten = useRef(0);
 
   const resetGame = useCallback(() => {
@@ -127,13 +137,25 @@ export function useSnakeLogic() {
       // Check regular food / Jerry
       if (newHead.x === currentFood.x && newHead.y === currentFood.y) {
         ate = true;
-        playSound('eat');
         
         if (isJerryLevel) {
+          playSound('win');
           setScore((s) => s + 500);
-          setHasWon(true);
-          return prevSnake; // Game over, keep old snake but we won!
+          if (isEndlessMode) {
+            setIsJerryLevel(false);
+            setEatenAnimals([]);
+            treatsEaten.current = 0;
+            let newFood = randomPoint();
+            while (newSnake.some((s) => s.x === newFood.x && s.y === newFood.y)) {
+              newFood = randomPoint();
+            }
+            setFood(newFood);
+          } else {
+            setHasWon(true);
+            return prevSnake; // Game over, keep old snake but we won!
+          }
         } else {
+          playSound('eat');
           setScore((s) => s + 10);
           setSpeed((s) => Math.max(SPEED_CAP, s - SPEED_DECREMENT));
           
@@ -171,6 +193,7 @@ export function useSnakeLogic() {
         playSound('eat-bonus');
         setScore((s) => s + 50);
         setSpeed((s) => Math.max(SPEED_CAP, s - (SPEED_DECREMENT * 2)));
+        setLastEatenEvent({ id: Date.now(), x: bonus.x, y: bonus.y, type: bonus.type });
         
         setEatenAnimals((prev) => {
           if (!prev.includes(bonus.type)) {
@@ -194,7 +217,7 @@ export function useSnakeLogic() {
       setDirection(nextDirection);
       return newSnake;
     });
-  }, [direction, nextDirection, food, bonus, gameOver, hasWon, isPaused, hasStarted]);
+  }, [direction, nextDirection, food, bonus, gameOver, hasWon, isPaused, hasStarted, isEndlessMode]);
 
   useEffect(() => {
     if (!hasStarted || gameOver || hasWon || isPaused) return;
@@ -203,16 +226,28 @@ export function useSnakeLogic() {
     return () => clearInterval(intervalId);
   }, [tick, speed, hasStarted, gameOver, hasWon, isPaused]);
 
+  useEffect(() => {
+    if (score > highScore) {
+      setHighScore(score);
+      try {
+        localStorage.setItem('arthur_highscore', score.toString());
+      } catch {}
+    }
+  }, [score, highScore]);
+
   return {
     snake,
     direction,
     food,
     bonus,
     score,
+    highScore,
     gameOver,
     hasWon,
     isJerryLevel,
     eatenAnimals,
+    lastEatenEvent,
+    isEndlessMode,
     isPaused,
     hasStarted,
     gridSize: GRID_SIZE,
@@ -220,6 +255,7 @@ export function useSnakeLogic() {
     changeDirection,
     resetGame,
     setIsPaused,
-    setHasStarted
+    setHasStarted,
+    setIsEndlessMode
   };
 }
