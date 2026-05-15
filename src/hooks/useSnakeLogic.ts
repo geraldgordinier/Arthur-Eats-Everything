@@ -5,6 +5,35 @@ export type Point = { x: number; y: number };
 export type BonusType = 'cow' | 'lion' | 'duck' | 'frog' | 'monkey';
 export type Bonus = Point & { type: BonusType };
 
+export const BONUS_TYPES: BonusType[] = ['cow', 'lion', 'duck', 'frog', 'monkey'];
+
+export const getBonusEmojis = (themeIndex: number): Record<BonusType, string> => {
+  if (themeIndex === 6) {
+    return {
+      cow: '🍕',
+      lion: '🍔',
+      duck: '🍟',
+      frog: '🌭',
+      monkey: '🍿',
+    };
+  } else if (themeIndex === 7) {
+    return {
+      cow: '⚽',
+      lion: '🏀',
+      duck: '🏈',
+      frog: '⚾',
+      monkey: '🎾',
+    };
+  }
+  return {
+    cow: '🧸',
+    lion: '🐰',
+    duck: '🐱',
+    frog: '🐶',
+    monkey: '🐵',
+  };
+};
+
 const GRID_SIZE = 20;
 const INITIAL_SPEED = 160; // ms per tick
 const SPEED_CAP = 60; // fastest speed
@@ -14,8 +43,6 @@ const randomPoint = (): Point => ({
   x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
   y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
 });
-
-const BONUS_TYPES: BonusType[] = ['cow', 'lion', 'duck', 'frog', 'monkey'];
 
 export function useSnakeLogic() {
   const [snake, setSnake] = useState<Point[]>([

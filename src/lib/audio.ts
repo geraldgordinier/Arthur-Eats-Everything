@@ -1,8 +1,35 @@
+let audioContext: AudioContext | null = null;
+
+const initAudio = () => {
+  if (!audioContext) {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContext) {
+      audioContext = new AudioContext();
+    }
+  }
+  if (audioContext && audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  return audioContext;
+};
+
+// Initialize on first interaction
+if (typeof window !== 'undefined') {
+  window.addEventListener('touchstart', initAudio, { once: true });
+  window.addEventListener('mousedown', initAudio, { once: true });
+  window.addEventListener('keydown', initAudio, { once: true });
+}
+
 export const playSound = (type: 'eat' | 'eat-bonus' | 'die' | 'win') => {
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = initAudio();
+    if (!ctx) return;
+    
+    // In case there's transient mobile browser behavior suspending it again
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 

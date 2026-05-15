@@ -1,15 +1,7 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { useSnakeLogic, BonusType } from './hooks/useSnakeLogic';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
+import { useSnakeLogic, BonusType, getBonusEmojis } from './hooks/useSnakeLogic';
 import { SnakeCanvas } from './components/SnakeCanvas';
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, RotateCcw, Pause, Trophy, Star } from 'lucide-react';
-
-const BONUS_EMOJIS: Record<BonusType, string> = {
-  cow: '🐮',
-  lion: '🦁',
-  duck: '🦆',
-  frog: '🐸',
-  monkey: '🐵',
-};
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, RotateCcw, Pause, Trophy, Star, Palette } from 'lucide-react';
 
 const THEMES = {
   1: {
@@ -20,7 +12,7 @@ const THEMES = {
     textMuted: 'text-[#FF0055]',
     textInv: 'text-white',
     button: 'bg-[#2a1a3a] text-[#00F0FF] border-[3px] border-[#00F0FF] shadow-[0_4px_0_#FF0055] hover:bg-[#3a2a4a]',
-    canvas: 'bg-[#0f0916] border-[3px] border-[#00F0FF] shadow-[4px_4px_0_0_#FF0055]',
+    canvas: 'bg-[#40275c] border-[3px] border-[#00F0FF] shadow-[4px_4px_0_0_#FF0055]',
     overlay: 'bg-black/70 backdrop-blur-sm',
     overlayPanel: 'bg-[#1a1025] border-[3px] border-[#00F0FF] shadow-[6px_6px_0_0_#FF0055]',
     primaryBtn: 'bg-[#FF0055] hover:bg-[#d00044] text-white',
@@ -28,6 +20,7 @@ const THEMES = {
     dangerBtn: 'bg-[#FF0055] hover:bg-[#d00044] text-white',
     bonusUnf: 'bg-[#2a1a3a] border-[#1a1025]',
     bonusFnd: 'bg-[#0f0916] border-[#00F0FF] shadow-inner',
+    title: 'Stuffed Animals',
   },
   2: {
     panel: 'bg-[#2b1055]/95 border-[3px] border-[#00ffff] shadow-[4px_4px_0_0_#ff00ff]',
@@ -45,6 +38,7 @@ const THEMES = {
     dangerBtn: 'bg-[#ff00ff] hover:bg-[#d900d9] text-white',
     bonusUnf: 'bg-[#43187a] border-[#2b1055]',
     bonusFnd: 'bg-[#190833] border-[#00ffff] shadow-inner',
+    title: 'Stuffed Animals',
   },
   3: {
     panel: 'bg-white/95 border-[3px] border-pink-500 shadow-[4px_4px_0_0_#be185d]',
@@ -62,6 +56,7 @@ const THEMES = {
     dangerBtn: 'bg-rose-500 hover:bg-rose-600 text-white',
     bonusUnf: 'bg-white border-pink-200',
     bonusFnd: 'bg-pink-100 border-pink-500 shadow-inner',
+    title: 'Stuffed Animals',
   },
   4: {
     panel: 'bg-white/95 border-[3px] border-black shadow-[4px_4px_0_0_#000]',
@@ -79,6 +74,7 @@ const THEMES = {
     dangerBtn: 'bg-orange-500 hover:bg-orange-600 text-white',
     bonusUnf: 'bg-white border-gray-300',
     bonusFnd: 'bg-yellow-100 border-black shadow-inner',
+    title: 'Stuffed Animals',
   },
   5: {
     panel: 'bg-white/95 border-[3px] border-red-800 shadow-[4px_4px_0_0_#991b1b]',
@@ -96,11 +92,65 @@ const THEMES = {
     dangerBtn: 'bg-red-600 hover:bg-red-700 text-white',
     bonusUnf: 'bg-white border-red-200',
     bonusFnd: 'bg-red-50 border-red-800 shadow-inner',
+    title: 'Stuffed Animals',
+  },
+  6: {
+    panel: 'bg-yellow-50/95 border-[3px] border-red-500 shadow-[4px_4px_0_0_#b91c1c]',
+    panelInner: 'bg-white border-2 border-red-400 shadow-sm',
+    textHead: 'text-red-600',
+    textSub: 'text-yellow-700',
+    textMuted: 'text-red-500',
+    textInv: 'text-white',
+    button: 'bg-white text-red-600 border-[3px] border-red-500 shadow-[0_4px_0_#b91c1c] hover:bg-yellow-100',
+    canvas: 'bg-yellow-100 border-[3px] border-red-500 shadow-[4px_4px_0_0_#b91c1c]',
+    overlay: 'bg-red-900/40 backdrop-blur-sm',
+    overlayPanel: 'bg-yellow-50 border-[3px] border-red-500 shadow-[6px_6px_0_0_#b91c1c]',
+    primaryBtn: 'bg-red-500 hover:bg-red-600 text-white',
+    successBtn: 'bg-green-500 hover:bg-green-600 text-white',
+    dangerBtn: 'bg-red-600 hover:bg-red-700 text-white',
+    bonusUnf: 'bg-white border-yellow-300',
+    bonusFnd: 'bg-yellow-100 border-red-500 shadow-inner',
+    title: 'Junk Food',
+  },
+  7: {
+    panel: 'bg-green-900/95 border-[3px] border-white shadow-[4px_4px_0_0_#14532d]',
+    panelInner: 'bg-green-800 border-2 border-green-400 shadow-sm',
+    textHead: 'text-white',
+    textSub: 'text-green-300',
+    textMuted: 'text-green-400',
+    textInv: 'text-green-900',
+    button: 'bg-green-800 text-white border-[3px] border-white shadow-[0_4px_0_#14532d] hover:bg-green-700',
+    canvas: 'bg-green-800 border-[3px] border-white shadow-[4px_4px_0_0_#14532d]',
+    overlay: 'bg-black/50 backdrop-blur-sm',
+    overlayPanel: 'bg-green-900 border-[3px] border-white shadow-[6px_6px_0_0_#14532d]',
+    primaryBtn: 'bg-white hover:bg-gray-200 text-green-900',
+    successBtn: 'bg-green-500 hover:bg-green-600 text-white',
+    dangerBtn: 'bg-red-500 hover:bg-red-600 text-white',
+    bonusUnf: 'bg-green-800 border-green-600',
+    bonusFnd: 'bg-green-700 border-white shadow-inner',
+    title: 'Sports Balls',
   }
 };
 
 export default function App() {
-  const [themeIndex, setThemeIndex] = useState(1);
+  const [themeIndex, setThemeIndex] = useState(() => {
+    try {
+      const saved = localStorage.getItem('arthur_theme');
+      return saved ? parseInt(saved, 10) : 1;
+    } catch {
+      return 1;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('arthur_theme', themeIndex.toString());
+    } catch {}
+  }, [themeIndex]);
+
+  const cycleTheme = useCallback(() => {
+    setThemeIndex(prev => prev >= 7 ? 1 : prev + 1);
+  }, []);
 
   const {
     snake,
@@ -127,6 +177,7 @@ export default function App() {
   } = useSnakeLogic();
 
   const [particles, setParticles] = useState<{id: number, x: number, y: number, type: BonusType}[]>([]);
+  const touchStartRef = useRef<{x: number, y: number} | null>(null);
 
   useEffect(() => {
     if (lastEatenEvent) {
@@ -175,6 +226,8 @@ export default function App() {
         case '3': setThemeIndex(3); break;
         case '4': setThemeIndex(4); break;
         case '5': setThemeIndex(5); break;
+        case '6': setThemeIndex(6); break;
+        case '7': setThemeIndex(7); break;
       }
     };
 
@@ -182,20 +235,54 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [changeDirection, hasStarted, gameOver, hasWon, resetGame, setIsPaused, setHasStarted]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    
+    // Minimum distance for a swipe vs just a tap
+    if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        changeDirection({ x: dx > 0 ? 1 : -1, y: 0 });
+      } else {
+        changeDirection({ x: 0, y: dy > 0 ? 1 : -1 });
+      }
+    }
+    touchStartRef.current = null;
+  };
+
   const theme = THEMES[themeIndex as keyof typeof THEMES];
 
   return (
-    <div className={`min-h-[100dvh] w-full bg-theme-${themeIndex} flex flex-col items-center justify-start xl:justify-center p-2 sm:p-4 font-sans overflow-x-hidden transition-all duration-500`}>
+    <div 
+      className={`min-h-[100dvh] w-full bg-theme-${themeIndex} flex flex-col items-center justify-start xl:justify-center p-2 sm:p-4 font-sans overflow-x-hidden transition-all duration-500`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="flex flex-col md:flex-row gap-2 sm:gap-6 items-center md:items-start w-full max-w-3xl justify-center pt-2 sm:pt-8 pb-4 md:py-0">
         
         <div className="w-full max-w-[400px] max-h-[100dvh] flex flex-col gap-2 sm:gap-4 shrink-0 px-1 sm:px-0">
           
           {/* Header */}
-          <div className={`flex items-center justify-between p-2 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 transition-colors duration-500 ${theme.panel}`}>
+          <div className={`flex items-center justify-between p-2 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 transition-colors duration-500 relative ${theme.panel}`}>
             <div>
-              <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight transition-colors duration-500 ${theme.textHead}`}>Arthur</h1>
+              <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight transition-colors duration-500 flex items-center gap-2 ${theme.textHead}`}>
+                Arthur
+                <button 
+                  onClick={cycleTheme}
+                  className={`p-1.5 rounded-full active:scale-95 transition-all duration-500 ${theme.panelInner}`}
+                  title="Change Theme"
+                >
+                  <Palette className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              </h1>
               <p className={`text-xs sm:text-sm font-medium leading-none mt-1 transition-colors duration-500 ${theme.textSub}`}>The Very Hungry Dog</p>
             </div>
+            
             <div className="flex items-center gap-2 sm:gap-3">
               {hasStarted && !gameOver && !hasWon && (
                 <button 
@@ -242,7 +329,7 @@ export default function App() {
                     '--dy': `${Math.sin(i * Math.PI / 3) * 60}px`,
                     '--rot': `${Math.random() * 360}deg`
                   } as React.CSSProperties}>
-                    {BONUS_EMOJIS[p.type]}
+                    {getBonusEmojis(themeIndex)[p.type]}
                   </div>
                 ))}
               </div>
@@ -255,7 +342,7 @@ export default function App() {
                   {!hasStarted ? (
                     <>
                       <h2 className={`text-xl sm:text-2xl font-bold mb-2 transition-colors duration-500 ${theme.textHead}`}>Ready to play?</h2>
-                      <p className={`mb-4 sm:mb-6 text-xs sm:text-sm transition-colors duration-500 ${theme.textSub}`}>Help Arthur eat his green tires and chew up all 5 of his favorite stuffed animals! He's blind in one eye but he's very hungry.</p>
+                      <p className={`mb-4 sm:mb-6 text-xs sm:text-sm transition-colors duration-500 ${theme.textSub}`}>Help Arthur eat his green tires and chew up all 5 of his favorite {theme.title.toLowerCase()}! He's blind in one eye but he's very hungry.</p>
                       <button 
                         onClick={() => setHasStarted(true)}
                         className={`font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full shadow-lg active:scale-95 transition-all text-base sm:text-lg flex items-center gap-2 ${theme.primaryBtn}`}
@@ -326,7 +413,7 @@ export default function App() {
         {/* Right: Scoreboard Sidebar */}
         <div className="w-full md:w-64 shrink-0 flex flex-col gap-4 max-w-[400px] px-1 sm:px-0 pb-4 sm:pb-0">
           <div className={`p-3 sm:p-5 rounded-2xl transition-colors duration-500 ${theme.panel}`}>
-            <h2 className={`text-lg sm:text-xl font-black mb-3 sm:mb-4 text-center tracking-tight transition-colors duration-500 ${theme.textHead}`}>Stuffed Animals</h2>
+            <h2 className={`hidden sm:block text-lg sm:text-xl font-black mb-3 sm:mb-4 text-center tracking-tight transition-colors duration-500 ${theme.textHead}`}>{theme.title}</h2>
             <div className="grid grid-cols-5 md:grid-cols-2 gap-2 sm:gap-3">
               {bonusTypes.map((type: BonusType) => {
                 const isEaten = eatenAnimals.includes(type);
@@ -339,7 +426,7 @@ export default function App() {
                   >
                     <div className="relative text-2xl sm:text-4xl mt-1">
                       <span className={`block transition-all duration-500 ${isEaten ? `opacity-50 grayscale blur-[1px] brightness-150` : 'scale-110'}`}>
-                        {BONUS_EMOJIS[type]}
+                        {getBonusEmojis(themeIndex)[type]}
                       </span>
                       {isEaten && (
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -362,10 +449,13 @@ export default function App() {
                   checked={isEndlessMode}
                   onChange={(e) => setIsEndlessMode(e.target.checked)}
                 />
-                <div className={`block w-10 h-6 sm:w-12 sm:h-7 rounded-full transition-colors duration-300 ${isEndlessMode ? 'bg-[#FF0055]' : 'bg-current opacity-20'}`}></div>
+                <div className={`block w-10 h-6 sm:w-12 sm:h-7 rounded-full transition-colors duration-300 ${isEndlessMode ? 'bg-[#FF0055]' : 'bg-white/70 shadow-inner'}`}></div>
                 <div className={`absolute left-1 top-1 bg-white w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow transition-transform duration-300 ${isEndlessMode ? 'translate-x-4 sm:translate-x-5' : ''}`}></div>
               </div>
-              <span className={`text-sm sm:text-base font-bold transition-colors duration-500 select-none ${theme.textHead}`}>Endless Mode</span>
+              <span className={`text-sm sm:text-base font-bold transition-colors duration-500 select-none ${theme.textHead}`}>
+                <span className="hidden sm:inline">Endless Mode</span>
+                <span className="sm:hidden">Endless</span>
+              </span>
             </label>
           </div>
 

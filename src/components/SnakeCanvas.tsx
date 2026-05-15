@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Point, BonusType, Bonus } from '../hooks/useSnakeLogic';
+import { Point, BonusType, Bonus, getBonusEmojis } from '../hooks/useSnakeLogic';
 
 interface SnakeCanvasProps {
   snake: Point[];
@@ -18,14 +18,6 @@ const THEME = {
   grid: 'rgba(0, 0, 0, 0.04)',
   arthur: '#5c3a21', // rich milk-chocolate brown
   arthurLight: '#8B5A2B',
-};
-
-const BONUS_EMOJIS: Record<BonusType, string> = {
-  cow: '🐮',
-  lion: '🦁',
-  duck: '🦆',
-  frog: '🐸',
-  monkey: '🐵',
 };
 
 export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
@@ -125,6 +117,24 @@ export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
         ctx.fillRect(i, 0, cellSize/2, height);
         ctx.fillRect(0, i, width, cellSize/2);
       }
+    } else if (themeIndex === 6) { // Diner
+      ctx.fillStyle = 'rgba(220, 38, 38, 0.1)'; 
+      for(let x=0; x<gridSize; x++) {
+         for(let y=0; y<gridSize; y++) {
+            if((x+y)%2 === 0) {
+               ctx.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+            }
+         }
+      }
+    } else if (themeIndex === 7) { // Sports Grass
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= width; i += cellSize) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0); ctx.lineTo(i, height);
+        ctx.moveTo(0, i); ctx.lineTo(width, i);
+        ctx.stroke();
+      }
     } else { // Fallback standard grid
       ctx.fillStyle = THEME.grid;
       for (let i = 0; i <= width; i += cellSize) {
@@ -176,7 +186,8 @@ export const SnakeCanvas: React.FC<SnakeCanvasProps> = ({
 
     // Draw bonus food (stuffed animals)
     if (bonus) {
-      drawEmoji(BONUS_EMOJIS[bonus.type], bonus, cellSize * 1.25);
+      const THEME_EMOJIS = getBonusEmojis(themeIndex);
+      drawEmoji(THEME_EMOJIS[bonus.type], bonus, cellSize * 1.25);
     }
 
     // Draw Arthur (Snake)
